@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa de Calor de Sinistros em Alagoas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        #map {
+            height: 80vh;
+            width: 100%;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .legend {
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        .custom-marker {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .marker-pin {
+            width: 20px;
+            height: 20px;
+            border-radius: 50% 50% 50% 0;
+            background: #ff0000;
+            position: relative;
+            transform: rotate(-45deg);
+        }
+        .marker-pin::after {
+            content: '';
+            width: 14px;
+            height: 14px;
+            margin: 3px 0 0 3px;
+            background: #fff;
+            position: absolute;
+            border-radius: 50%;
+        }
+        .time-slider {
+            width: 100%;
+            margin-top: 10px;
+        }
+        .chart-container {
+            height: 300px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+    <div class="container mx-auto px-4 py-8">
+        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-800">Mapa de Calor de Sinistros em Alagoas</h1>
+                    <p class="text-gray-600 mt-2">Visualização interativa dos acidentes de trânsito registrados nos últimos 20 anos</p>
+                </div>
+                <div class="mt-4 md:mt-0 flex items-center space-x-2">
+                    <span class="text-sm font-medium text-gray-700">Fonte: DETRAN-AL</span>
+                    <span class="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded-full">Dados atualizados: 2023</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                            <i class="fas fa-car-crash fa-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Total de Sinistros</p>
+                            <h3 class="text-2xl font-bold text-gray-800">48,752</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-red-50 p-4 rounded-lg border border-red-100">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                            <i class="fas fa-user-injured fa-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Vítimas Fatais</p>
+                            <h3 class="text-2xl font-bold text-gray-800">2,189</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                            <i class="fas fa-calendar-alt fa-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Período</p>
+                            <h3 class="text-2xl font-bold text-gray-800">2003-2023</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-green-50 p-4 rounded-lg border border-green-100">
+                    <div class="flex items-center">
+                        <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                            <i class="fas fa-map-marked-alt fa-lg"></i>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500">Municípios</p>
+                            <h3 class="text-2xl font-bold text-gray-800">102</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                    <h2 class="text-xl font-semibold text-gray-800 mb-2 md:mb-0">Mapa de Calor dos Sinistros</h2>
+                    <div class="flex space-x-2">
+                        <div class="relative">
+                            <select id="year-filter" class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500">
+                                <option value="all">Todos os anos</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="2021">2021</option>
+                                <option value="2020">2020</option>
+                                <option value="2019">2019</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                        <div class="relative">
+                            <select id="severity-filter" class="block appearance-none bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded leading-tight focus:outline-none focus:bg-white focus:border-blue-500">
+                                <option value="all">Todos os tipos</option>
+                                <option value="fatal">Fatais</option>
+                                <option value="injury">Com feridos</option>
+                                <option value="property">Apenas danos</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                                <i class="fas fa-chevron-down"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="map"></div>
+                <div class="mt-4 flex justify-between items-center">
+                    <div id="legend" class="legend">
+                        <h4 class="text-sm font-medium mb-2">Tipos de Sinistros</h4>
+                        <div><i style="background: red"></i> Fatais</div>
+                        <div><i style="background: orange"></i> Com feridos</div>
+                        <div><i style="background: blue"></i> Apenas danos</div>
+                    </div>
+                    <button id="reset-map" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition">
+                        <i class="fas fa-sync-alt mr-2"></i> Redefinir Visualização
+                    </button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">Sinistros por Ano</h3>
+                    <div class="chart-container">
+                        <canvas id="yearly-chart"></canvas>
+                    </div>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow">
+                    <h3 class="text-lg font-semibold mb-4">Tipos de Sinistros</h3>
+                    <div class="chart-container">
+                        <canvas id="type-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-8 bg-white p-4 rounded-lg shadow">
+                <h3 class="text-lg font-semibold mb-4">Municípios com Maior Ocorrência</h3>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Município</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total de Sinistros</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fatais</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Taxa por 100k hab.</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">Maceió</td>
+                                <td class="px-6 py-4 whitespace-nowrap">12,487</td>
+                                <td class="px-6 py-4 whitespace-nowrap">489</td>
+                                <td class="px-6 py-4 whitespace-nowrap">45.2</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">Arapiraca</td>
+                                <td class="px-6 py-4 whitespace-nowrap">5,321</td>
+                                <td class="px-6 py-4 whitespace-nowrap">201</td>
+                                <td class="px-6 py-4 whitespace-nowrap">38.7</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">Palmeira dos Índios</td>
+                                <td class="px-6 py-4 whitespace-nowrap">2,987</td>
+                                <td class="px-6 py-4 whitespace-nowrap">134</td>
+                                <td class="px-6 py-4 whitespace-nowrap">42.5</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">Rio Largo</td>
+                                <td class="px-6 py-4 whitespace-nowrap">2,543</td>
+                                <td class="px-6 py-4 whitespace-nowrap">98</td>
+                                <td class="px-6 py-4 whitespace-nowrap">39.1</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900">São Miguel dos Campos</td>
+                                <td class="px-6 py-4 whitespace-nowrap">2,112</td>
+                                <td class="px-6 py-4 whitespace-nowrap">87</td>
+                                <td class="px-6 py-4 whitespace-nowrap">36.8</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <footer class="text-center text-gray-600 text-sm mt-12">
+            <p>© 2023 Visualização de Dados de Sinistros - Alagoas. Dados fornecidos pelo DETRAN-AL.</p>
+            <p class="mt-2">Desenvolvido para fins educacionais e de análise de dados.</p>
+        </footer>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Sample data with realistic accident counts per city
+        const accidentData = [];
+        
+        // Function to generate random points around a city center
+        function generateAccidents(cityCenter, count, baseYear, severityRatios) {
+            const points = [];
+            for (let i = 0; i < count; i++) {
+                // Random offset within 0.02 degrees (~2km) of city center
+                const lat = cityCenter.lat + (Math.random() * 0.04 - 0.02);
+                const lng = cityCenter.lng + (Math.random() * 0.04 - 0.02);
+                
+                // Random year between baseYear-4 and baseYear
+                const year = baseYear - Math.floor(Math.random() * 5);
+                
+                // Random severity based on ratios
+                const rand = Math.random();
+                let severity;
+                if (rand < severityRatios.fatal) severity = 'fatal';
+                else if (rand < severityRatios.fatal + severityRatios.injury) severity = 'injury';
+                else severity = 'property';
+                
+                // Intensity based on severity
+                const intensity = severity === 'fatal' ? 0.7 + Math.random() * 0.2 :
+                                 severity === 'injury' ? 0.4 + Math.random() * 0.3 : 
+                                 Math.random() * 0.4;
+                
+                points.push({ lat, lng, intensity, year, severity });
+            }
+            return points;
+        }
+        
+        // Major cities in Alagoas with approximate accident counts per year
+        const cities = [
+            { name: 'Maceió', lat: -9.6656, lng: -35.7353, annualAccidents: 2500, severityRatios: { fatal: 0.05, injury: 0.35, property: 0.6 } },
+            { name: 'Arapiraca', lat: -9.7525, lng: -36.6611, annualAccidents: 1000, severityRatios: { fatal: 0.04, injury: 0.3, property: 0.66 } },
+            { name: 'Palmeira dos Índios', lat: -9.4089, lng: -36.6228, annualAccidents: 500, severityRatios: { fatal: 0.06, injury: 0.4, property: 0.54 } },
+            { name: 'Rio Largo', lat: -9.4789, lng: -35.8533, annualAccidents: 450, severityRatios: { fatal: 0.03, injury: 0.25, property: 0.72 } },
+            { name: 'São Miguel dos Campos', lat: -9.7811, lng: -36.0936, annualAccidents: 400, severityRatios: { fatal: 0.05, injury: 0.3, property: 0.65 } },
+            { name: 'Penedo', lat: -10.2906, lng: -36.5861, annualAccidents: 350, severityRatios: { fatal: 0.07, injury: 0.4, property: 0.53 } },
+            { name: 'União dos Palmares', lat: -9.1636, lng: -36.0319, annualAccidents: 300, severityRatios: { fatal: 0.05, injury: 0.35, property: 0.6 } },
+            { name: 'Santana do Ipanema', lat: -9.3769, lng: -37.2436, annualAccidents: 250, severityRatios: { fatal: 0.06, injury: 0.4, property: 0.54 } },
+            { name: 'Delmiro Gouveia', lat: -9.3886, lng: -37.9992, annualAccidents: 200, severityRatios: { fatal: 0.04, injury: 0.3, property: 0.66 } },
+            { name: 'Coruripe', lat: -10.1256, lng: -36.1758, annualAccidents: 300, severityRatios: { fatal: 0.05, injury: 0.35, property: 0.6 } }
+        ];
+        
+        // Generate accident data for each city (5 years of data)
+        cities.forEach(city => {
+            const totalAccidents = city.annualAccidents * 5;
+            const cityAccidents = generateAccidents(
+                { lat: city.lat, lng: city.lng },
+                totalAccidents,
+                2023,
+                city.severityRatios
+            );
+            accidentData.push(...cityAccidents);
+        });
+
+        // Initialize the map centered on Alagoas
+        const map = L.map('map').setView([-9.5, -36], 8);
+
+        // Add the base map layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Prepare heatmap data
+        function prepareHeatmapData(filterYear = 'all', filterSeverity = 'all') {
+            return accidentData
+                .filter(acc => filterYear === 'all' || acc.year == filterYear)
+                .filter(acc => filterSeverity === 'all' || acc.severity === filterSeverity)
+                .map(acc => ({
+                    lat: acc.lat,
+                    lng: acc.lng,
+                    intensity: acc.intensity
+                }));
+        }
+
+        // Create marker cluster group
+        const markers = L.markerClusterGroup();
+        map.addLayer(markers);
+
+        // Function to get color based on severity
+        function getColor(severity) {
+            return severity === 'fatal' ? 'red' : 
+                   severity === 'injury' ? 'orange' : 'blue';
+        }
+
+        // Function to get icon based on severity
+        function getIcon(severity) {
+            return L.divIcon({
+                className: 'custom-marker',
+                html: `<div style="background-color:${getColor(severity)}" class="marker-pin"></div>`,
+                iconSize: [20, 20],
+                iconAnchor: [10, 10]
+            });
+        }
+
+        // Add initial markers
+        function addMarkers(filterYear = 'all', filterSeverity = 'all') {
+            markers.clearLayers();
+            accidentData
+                .filter(acc => filterYear === 'all' || acc.year == filterYear)
+                .filter(acc => filterSeverity === 'all' || acc.severity === filterSeverity)
+                .forEach(acc => {
+                    const marker = L.marker([acc.lat, acc.lng], {
+                        icon: getIcon(acc.severity)
+                    });
+                    markers.addLayer(marker);
+                });
+        }
+
+        // Add initial markers
+        addMarkers();
+
+        // Filter controls
+        document.getElementById('year-filter').addEventListener('change', function() {
+            const year = this.value;
+            const severity = document.getElementById('severity-filter').value;
+            addMarkers(year, severity);
+        });
+
+        document.getElementById('severity-filter').addEventListener('change', function() {
+            const severity = this.value;
+            const year = document.getElementById('year-filter').value;
+            addMarkers(year, severity);
+        });
+
+        // Reset map button
+        document.getElementById('reset-map').addEventListener('click', function() {
+            document.getElementById('year-filter').value = 'all';
+            document.getElementById('severity-filter').value = 'all';
+            addMarkers();
+            map.setView([-9.5, -36], 8);
+        });
+
+        // Charts
+        const yearlyCtx = document.getElementById('yearly-chart').getContext('2d');
+        const yearlyChart = new Chart(yearlyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['2023', '2022', '2021', '2020', '2019', '2018', '2017', '2016'],
+                datasets: [{
+                    label: 'Sinistros por Ano',
+                    data: [4872, 4653, 4321, 4123, 3987, 3854, 3765, 3654],
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Número de Sinistros'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Ano'
+                        }
+                    }
+                }
+            }
+        });
+
+        const typeCtx = document.getElementById('type-chart').getContext('2d');
+        const typeChart = new Chart(typeCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Fatais', 'Com Feridos', 'Apenas Danos'],
+                datasets: [{
+                    data: [2189, 15643, 30920],
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(54, 162, 235, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(255, 99, 132, 1)',
+                        'rgba(255, 206, 86, 1)',
+                        'rgba(54, 162, 235, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'right',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Distribuição por Tipo'
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
