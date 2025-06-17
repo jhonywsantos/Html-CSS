@@ -57,9 +57,36 @@
             outline: none;
             box-shadow: 0 0 0 2px rgba(17, 34, 251, 0.5);
         }
+        
+        /* Background image styling */
+        body {
+            background-image: url('https://raw.githubusercontent.com/jhonywsantos/Html-CSS/main/Landing%20Page/Imagens/tela%20de%20fundo.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+        }
+        
+        /* Add a semi-transparent overlay to improve readability */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.85);
+            z-index: -1;
+        }
+        
+        /* Sections with white background */
+        section.bg-white, section.bg-gray-50 {
+            background-color: rgba(255, 255, 255, 0.9) !important;
+            backdrop-filter: blur(5px);
+        }
     </style>
 </head>
-<body class="bg-gray-50 font-sans antialiased">
+<body class="font-sans antialiased">
     <!-- Header/Navigation -->
     <header class="bg-white shadow-sm sticky top-0 z-50">
         <div class="container mx-auto px-6 py-4">
@@ -222,8 +249,15 @@
     </section>
 
     <!-- Social Proof Section -->
-    <section class="py-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-        <div class="container mx-auto px-6 text-center">
+    <!-- Social Proof Section -->
+    <section class="py-16 text-white relative">
+        <div class="absolute inset-0 overflow-hidden">
+            <img src="https://raw.githubusercontent.com/jhonywsantos/Html-CSS/main/Landing%20Page/Imagens/tela%20de%20fundo.png" 
+                 alt="Background" 
+                 class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-[#2b5b7d] opacity-80"></div>
+        </div>
+        <div class="container mx-auto px-6 text-center relative z-10">
             <h2 class="text-2xl md:text-3xl font-bold mb-8">Conecte-se Comigo</h2>
             <p class="max-w-2xl mx-auto mb-12 text-lg">
                 Estou sempre aberto a novas conexões e oportunidades. Vamos conversar sobre tecnologia, projetos ou possíveis colaborações!
@@ -250,7 +284,7 @@
             </h2>
             <div class="max-w-4xl mx-auto bg-gray-50 rounded-xl shadow-md overflow-hidden">
                 <div class="md:flex">
-                    <div class="md:w-1/2 bg-gradient-to-br from-blue-500 to-purple-600 text-white p-8 md:p-12">
+                    <div class="md:w-1/2 bg-gradient-to-br from-[#4a799b] to-[#b2dcfc] text-white p-8 md:p-12">
                         <h3 class="text-2xl font-bold mb-4">Informações de Contato</h3>
                         <p class="mb-6">Fique à vontade para me enviar uma mensagem. Responderei o mais breve possível!</p>
                                                 
