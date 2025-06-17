@@ -350,28 +350,38 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-gray-800 text-white py-8">
-        <div class="container mx-auto px-6">
+    <!-- Footer -->
+    <footer class="text-white py-8 relative overflow-hidden">
+        <!-- Imagem de fundo com overlay -->
+        <div class="absolute inset-0 z-0">
+            <img src="https://raw.githubusercontent.com/jhonywsantos/Html-CSS/main/Landing%20Page/Imagens/fundo%20abstrato%20azul%20claro.jpg" 
+                 alt="Background" 
+                 class="w-full h-full object-cover">
+            <div class="absolute inset-0 bg-gray-800 bg-opacity-50"></div>
+        </div>
+        
+        <!-- Conteúdo -->
+        <div class="container mx-auto px-6 relative z-10">
             <div class="flex flex-col md:flex-row justify-between items-center">
                 <div class="mb-4 md:mb-0">
                     <div class="text-2xl font-bold gradient-text">Jhony Wictor</div>
-                    <p class="text-gray-400 mt-2">Desenvolvedor & Inovador</p>
+                    <p class="text-gray-300 mt-2">Desenvolvedor & Inovador</p>
                 </div>
                                 
                 <div class="flex space-x-6">
-                    <a href="https://github.com/jhonywsantos" target="_blank" class="text-gray-400 hover:text-white transition">
+                    <a href="https://github.com/jhonywsantos" target="_blank" class="text-gray-300 hover:text-white transition">
                         <i class="fab fa-github text-xl"></i>
                     </a>
-                    <a href="https://www.linkedin.com/in/jhony-wictor-n-santos-4b8a85237" target="_blank" class="text-gray-400 hover:text-white transition">
+                    <a href="https://www.linkedin.com/in/jhony-wictor-n-santos-4b8a85237" target="_blank" class="text-gray-300 hover:text-white transition">
                         <i class="fab fa-linkedin-in text-xl"></i>
                     </a>
-                    <a href="https://www.instagram.com/jhonywictor?igsh=MW81OWlwZ2Jscmk2bA==" target="_blank" class="text-gray-400 hover:text-white transition">
+                    <a href="https://www.instagram.com/jhonywictor?igsh=MW81OWlwZ2Jscmk2bA==" target="_blank" class="text-gray-300 hover:text-white transition">
                         <i class="fab fa-instagram text-xl"></i>
                     </a>
                 </div>
             </div>
                         
-            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-400">
+            <div class="border-t border-gray-700 mt-8 pt-8 text-center text-gray-300">
                 <p>&copy; 2025 Jhony Wictor. Todos os direitos reservados.</p>
             </div>
         </div>
