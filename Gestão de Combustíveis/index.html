@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão Posto Combustível</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .sidebar {
+            transition: all 0.3s;
+        }
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        .sidebar.collapsed .sidebar-text {
+            display: none;
+        }
+        .sidebar.collapsed .logo-text {
+            display: none;
+        }
+        .sidebar.collapsed .nav-item {
+            justify-content: center;
+        }
+        .content {
+            transition: all 0.3s;
+        }
+        .content.expanded {
+            margin-left: 70px;
+        }
+        .tank-level {
+            height: 150px;
+            position: relative;
+        }
+        .tank-fill {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            transition: height 0.5s ease;
+        }
+        .chart-container {
+            height: 300px;
+        }
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                z-index: 50;
+                transform: translateX(-100%);
+            }
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            .content {
+                margin-left: 0 !important;
+            }
+            .mobile-menu-btn {
+                display: block;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar -->
+        <div class="sidebar bg-blue-800 text-white w-64 flex flex-col">
+            <div class="p-4 flex items-center justify-between border-b border-blue-700">
+                <div class="flex items-center">
+                    <i class="fas fa-gas-pump text-2xl mr-3"></i>
+                    <span class="logo-text text-xl font-bold">Posto FuelMaster</span>
+                </div>
+                <button id="toggleSidebar" class="text-white focus:outline-none">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+            <div class="flex-1 overflow-y-auto">
+                <nav class="p-4">
+                    <div class="space-y-2">
+                        <a href="#" class="nav-item flex items-center px-4 py-3 rounded-lg bg-blue-700 text-white">
+                            <i class="fas fa-tachometer-alt mr-3"></i>
+                            <span class="sidebar-text">Dashboard</span>
+                        </a>
+                        <a href="#vendas" class="nav-item flex items-center px-4 py-3 rounded-lg hover:bg-blue-700 text-white">
+                            <i class="fas fa-cash-register mr-3"></i>
+                            <span class="sidebar-text">Vendas</span>
+                        </a>
+                        <a href="#reabastecimento" class="nav-item flex items-center px-4 py-3 rounded-lg hover:bg-blue-700 text-white">
+                            <i class="fas fa-truck mr-3"></i>
+                            <span class="sidebar-text">Reabastecimento</span>
+                        </a>
+                        <a href="#relatorios" class="nav-item flex items-center px-4 py-3 rounded-lg hover:bg-blue-700 text-white">
+                            <i class="fas fa-chart-bar mr-3"></i>
+                            <span class="sidebar-text">Relatórios</span>
+                        </a>
+                        <a href="#estoque" class="nav-item flex items-center px-4 py-3 rounded-lg hover:bg-blue-700 text-white">
+                            <i class="fas fa-oil-can mr-3"></i>
+                            <span class="sidebar-text">Estoque</span>
+                        </a>
+                        <a href="#configuracoes" class="nav-item flex items-center px-4 py-3 rounded-lg hover:bg-blue-700 text-white">
+                            <i class="fas fa-cog mr-3"></i>
+                            <span class="sidebar-text">Configurações</span>
+                        </a>
+                    </div>
+                </nav>
+            </div>
+            <div class="p-4 border-t border-blue-700">
+                <div class="flex items-center">
+                    <img src="src/images/avatar.png" alt="User" class="rounded-full mr-3">
+                    <div class="sidebar-text">
+                        <div class="font-medium">Admin</div>
+                        <div class="text-sm text-blue-200">Administrador</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="content flex-1 overflow-auto">
+            <!-- Mobile Menu Button -->
+            <button id="mobileMenuBtn" class="mobile-menu-btn fixed top-4 left-4 z-40 bg-blue-800 text-white p-2 rounded-md md:hidden">
+                <i class="fas fa-bars"></i>
+            </button>
+
+            <!-- Header -->
+            <header class="bg-white shadow-sm">
+                <div class="px-6 py-4 flex justify-between items-center">
+                    <h1 class="text-2xl font-semibold text-gray-800">Dashboard</h1>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <button class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                                <i class="fas fa-bell"></i>
+                                <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                            </button>
+                        </div>
+                        <div class="relative">
+                            <button class="text-gray-600 hover:text-gray-900 focus:outline-none">
+                                <i class="fas fa-envelope"></i>
+                                <span class="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <main class="p-6">
+                <!-- Stats Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-blue-100 text-blue-600 mr-4">
+                                <i class="fas fa-gas-pump text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">Vendas Hoje</p>
+                                <h3 class="text-2xl font-bold">R$ <span id="vendasHoje">4,250.00</span></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-green-100 text-green-600 mr-4">
+                                <i class="fas fa-chart-line text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">Vendas Mês</p>
+                                <h3 class="text-2xl font-bold">R$ <span id="vendasMes">58,700.00</span></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                                <i class="fas fa-truck text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">Reabastecimentos</p>
+                                <h3 class="text-2xl font-bold"><span id="reabastecimentos">12</span></h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <div class="flex items-center">
+                            <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                                <i class="fas fa-exclamation-triangle text-xl"></i>
+                            </div>
+                            <div>
+                                <p class="text-gray-500">Alertas Estoque</p>
+                                <h3 class="text-2xl font-bold"><span id="alertasEstoque">3</span></h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tanques de Combustível -->
+                <div class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold text-gray-800">Nível dos Tanques</h2>
+                    </div>
+                    <div class="p-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="text-center">
+                            <h3 class="font-medium mb-2">Gasolina Comum</h3>
+                            <div class="tank-level bg-gray-200 rounded-t-lg mx-auto w-24 relative">
+                                <div id="gasolinaComumFill" class="tank-fill bg-yellow-500 rounded-t-lg" style="height: 65%;"></div>
+                            </div>
+                            <p class="mt-2"><span id="gasolinaComumQtd">6,500</span> L</p>
+                            <p class="text-sm text-gray-500">Capacidade: 10,000 L</p>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="font-medium mb-2">Gasolina Aditivada</h3>
+                            <div class="tank-level bg-gray-200 rounded-t-lg mx-auto w-24 relative">
+                                <div id="gasolinaAditivadaFill" class="tank-fill bg-yellow-600 rounded-t-lg" style="height: 45%;"></div>
+                            </div>
+                            <p class="mt-2"><span id="gasolinaAditivadaQtd">4,500</span> L</p>
+                            <p class="text-sm text-gray-500">Capacidade: 10,000 L</p>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="font-medium mb-2">Etanol</h3>
+                            <div class="tank-level bg-gray-200 rounded-t-lg mx-auto w-24 relative">
+                                <div id="etanolFill" class="tank-fill bg-green-500 rounded-t-lg" style="height: 30%;"></div>
+                            </div>
+                            <p class="mt-2"><span id="etanolQtd">3,000</span> L</p>
+                            <p class="text-sm text-gray-500">Capacidade: 10,000 L</p>
+                        </div>
+                        <div class="text-center">
+                            <h3 class="font-medium mb-2">Diesel S10</h3>
+                            <div class="tank-level bg-gray-200 rounded-t-lg mx-auto w-24 relative">
+                                <div id="dieselFill" class="tank-fill bg-blue-500 rounded-t-lg" style="height: 75%;"></div>
+                            </div>
+                            <p class="mt-2"><span id="dieselQtd">7,500</span> L</p>
+                            <p class="text-sm text-gray-500">Capacidade: 10,000 L</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vendas Section -->
+                <div id="vendas" class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-xl font-semibold text-gray-800">Registrar Venda</h2>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-history mr-2"></i> Histórico
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <form id="vendaForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="tipoCombustivel" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Combustível</label>
+                                <select id="tipoCombustivel" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Selecione...</option>
+                                    <option value="gasolina_comum">Gasolina Comum</option>
+                                    <option value="gasolina_aditivada">Gasolina Aditivada</option>
+                                    <option value="etanol">Etanol</option>
+                                    <option value="diesel">Diesel S10</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="quantidade" class="block text-sm font-medium text-gray-700 mb-1">Quantidade (L)</label>
+                                <input type="number" id="quantidade" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="valorTotal" class="block text-sm font-medium text-gray-700 mb-1">Valor Total (R$)</label>
+                                <input type="number" id="valorTotal" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" readonly>
+                            </div>
+                            <div class="md:col-span-3">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Forma de Pagamento</label>
+                                        <div class="flex space-x-4">
+                                            <label class="inline-flex items-center">
+                                                <input type="radio" name="pagamento" value="dinheiro" class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                                <span class="ml-2">Dinheiro</span>
+                                            </label>
+                                            <label class="inline-flex items-center">
+                                                <input type="radio" name="pagamento" value="cartao" class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                                <span class="ml-2">Cartão</span>
+                                            </label>
+                                            <label class="inline-flex items-center">
+                                                <input type="radio" name="pagamento" value="pix" class="h-4 w-4 text-blue-600 focus:ring-blue-500">
+                                                <span class="ml-2">PIX</span>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <button type="button" id="registrarVenda" class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md">
+                                        <i class="fas fa-check-circle mr-2"></i> Registrar Venda
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Reabastecimento Section -->
+                <div id="reabastecimento" class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                        <h2 class="text-xl font-semibold text-gray-800">Reabastecimento</h2>
+                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md">
+                            <i class="fas fa-history mr-2"></i> Histórico
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        <form id="reabastecimentoForm" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="reabTipoCombustivel" class="block text-sm font-medium text-gray-700 mb-1">Tipo de Combustível</label>
+                                <select id="reabTipoCombustivel" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">Selecione...</option>
+                                    <option value="gasolina_comum">Gasolina Comum</option>
+                                    <option value="gasolina_aditivada">Gasolina Aditivada</option>
+                                    <option value="etanol">Etanol</option>
+                                    <option value="diesel">Diesel S10</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="reabQuantidade" class="block text-sm font-medium text-gray-700 mb-1">Quantidade (L)</label>
+                                <input type="number" id="reabQuantidade" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="reabValorUnitario" class="block text-sm font-medium text-gray-700 mb-1">Valor Unitário (R$)</label>
+                                <input type="number" id="reabValorUnitario" step="0.01" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="reabFornecedor" class="block text-sm font-medium text-gray-700 mb-1">Fornecedor</label>
+                                <input type="text" id="reabFornecedor" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label for="reabNotaFiscal" class="block text-sm font-medium text-gray-700 mb-1">Nota Fiscal</label>
+                                <input type="text" id="reabNotaFiscal" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div class="md:col-span-3 flex justify-end">
+                                <button type="button" id="registrarReabastecimento" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                                    <i class="fas fa-truck-loading mr-2"></i> Registrar Reabastecimento
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Relatórios Section -->
+                <div id="relatorios" class="bg-white rounded-lg shadow mb-6">
+                    <div class="p-6 border-b border-gray-200">
+                        <h2 class="text-xl font-semibold text-gray-800">Relatórios</h2>
+                    </div>
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="font-medium mb-4">Vendas por Combustível</h3>
+                                <div class="chart-container">
+                                    <canvas id="vendasCombustivelChart"></canvas>
+                                </div>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <h3 class="font-medium mb-4">Vendas por Período</h3>
+                                <div class="chart-container">
+                                    <canvas id="vendasPeriodoChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 p-4 rounded-lg">
+                            <h3 class="font-medium mb-4">Filtros</h3>
+                            <form class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Período</label>
+                                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <option>Hoje</option>
+                                        <option selected>Esta Semana</option>
+                                        <option>Este Mês</option>
+                                        <option>Personalizado</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">De</label>
+                                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Até</label>
+                                    <input type="date" class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Combustível</label>
+                                    <select class="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="">Todos</option>
+                                        <option>Gasolina Comum</option>
+                                        <option>Gasolina Aditivada</option>
+                                        <option>Etanol</option>
+                                        <option>Diesel S10</option>
+                                    </select>
+                                </div>
+                                <div class="md:col-span-4 flex justify-end">
+                                    <button type="button" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-md">
+                                        <i class="fas fa-filter mr-2"></i> Aplicar Filtros
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="mt-6">
+                            <h3 class="font-medium mb-4">Relatório Detalhado</h3>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Combustível</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade (L)</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Unitário</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor Total</th>
+                                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">10/06/2023</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Gasolina Comum</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">40.00</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ 5.20</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ 208.00</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Venda</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">09/06/2023</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Diesel S10</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">2,000.00</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ 4.10</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ 8,200.00</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Reabastecimento</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">09/06/2023</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Etanol</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">30.00</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ 3.80</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ 114.00</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Venda</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">08/06/2023</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Gasolina Aditivada</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">50.00</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ 5.50</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">R$ 275.00</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">Venda</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="successModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-6 max-w-md w-full">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-semibold text-green-600">Sucesso!</h3>
+                <button id="closeModal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-4">
+                <p id="modalMessage">Operação realizada com sucesso!</p>
+            </div>
+            <div class="flex justify-end">
+                <button id="confirmModal" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Sidebar Toggle
+        const toggleSidebar = document.getElementById('toggleSidebar');
+        const sidebar = document.querySelector('.sidebar');
+        const content = document.querySelector('.content');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+
+        toggleSidebar.addEventListener('click', () => {
+            sidebar.classList.toggle('collapsed');
+            content.classList.toggle('expanded');
+        });
+
+        mobileMenuBtn.addEventListener('click', () => {
+            sidebar.classList.toggle('open');
+        });
+
+        // Preços dos combustíveis
+        const precosCombustivel = {
+            gasolina_comum: 5.20,
+            gasolina_aditivada: 5.50,
+            etanol: 3.80,
+            diesel: 4.10
+        };
+
+        // Quantidades nos tanques
+        const estoqueTanques = {
+            gasolina_comum: 6500,
+            gasolina_aditivada: 4500,
+            etanol: 3000,
+            diesel: 7500
+        };
+
+        // Atualizar valor total da venda
+        const tipoCombustivel = document.getElementById('tipoCombustivel');
+        const quantidade = document.getElementById('quantidade');
+        const valorTotal = document.getElementById('valorTotal');
+
+        tipoCombustivel.addEventListener('change', calcularValorVenda);
+        quantidade.addEventListener('input', calcularValorVenda);
+
+        function calcularValorVenda() {
+            const tipo = tipoCombustivel.value;
+            const qtd = parseFloat(quantidade.value) || 0;
+            
+            if (tipo && precosCombustivel[tipo]) {
+                const total = qtd * precosCombustivel[tipo];
+                valorTotal.value = total.toFixed(2);
+            } else {
+                valorTotal.value = '';
+            }
+        }
+
+        // Registrar Venda
+        const registrarVenda = document.getElementById('registrarVenda');
+        const vendaForm = document.getElementById('vendaForm');
+
+        registrarVenda.addEventListener('click', () => {
+            const tipo = tipoCombustivel.value;
+            const qtd = parseFloat(quantidade.value);
+            const valor = parseFloat(valorTotal.value);
+            const pagamento = document.querySelector('input[name="pagamento"]:checked')?.value;
+            
+            if (!tipo || isNaN(qtd) || qtd <= 0 || isNaN(valor) || !pagamento) {
+                showModal('Erro', 'Preencha todos os campos corretamente!', 'red');
+                return;
+            }
+            
+            // Atualizar estoque
+            estoqueTanques[tipo] -= qtd;
+            updateTankLevels();
+            
+            // Reset form
+            vendaForm.reset();
+            
+            showModal('Sucesso', 'Venda registrada com sucesso!');
+        });
+
+        // Registrar Reabastecimento
+        const registrarReabastecimento = document.getElementById('registrarReabastecimento');
+        const reabastecimentoForm = document.getElementById('reabastecimentoForm');
+
+        registrarReabastecimento.addEventListener('click', () => {
+            const tipo = document.getElementById('reabTipoCombustivel').value;
+            const qtd = parseFloat(document.getElementById('reabQuantidade').value);
+            const valorUnitario = parseFloat(document.getElementById('reabValorUnitario').value);
+            const fornecedor = document.getElementById('reabFornecedor').value;
+            const notaFiscal = document.getElementById('reabNotaFiscal').value;
+            
+            if (!tipo || isNaN(qtd) || qtd <= 0 || isNaN(valorUnitario) || !fornecedor) {
+                showModal('Erro', 'Preencha todos os campos obrigatórios!', 'red');
+                return;
+            }
+            
+            // Atualizar estoque
+            estoqueTanques[tipo] += qtd;
+            updateTankLevels();
+            
+            // Atualizar contador de reabastecimentos
+            const reabastecimentosElement = document.getElementById('reabastecimentos');
+            reabastecimentosElement.textContent = parseInt(reabastecimentosElement.textContent) + 1;
+            
+            // Reset form
+            reabastecimentoForm.reset();
+            
+            showModal('Sucesso', 'Reabastecimento registrado com sucesso!');
+        });
+
+        // Modal functions
+        const successModal = document.getElementById('successModal');
+        const modalMessage = document.getElementById('modalMessage');
+        const closeModal = document.getElementById('closeModal');
+        const confirmModal = document.getElementById('confirmModal');
+
+        function showModal(title, message, color = 'green') {
+            document.querySelector('#successModal h3').textContent = title;
+            document.querySelector('#successModal h3').classList.remove('text-green-600', 'text-red-600');
+            document.querySelector('#successModal h3').classList.add(`text-${color}-600`);
+            modalMessage.textContent = message;
+            successModal.classList.remove('hidden');
+        }
+
+        closeModal.addEventListener('click', () => {
+            successModal.classList.add('hidden');
+        });
+
+        confirmModal.addEventListener('click', () => {
+            successModal.classList.add('hidden');
+        });
+
+        // Update tank levels
+        function updateTankLevels() {
+            // Gasolina Comum
+            const gasolinaComumFill = document.getElementById('gasolinaComumFill');
+            const gasolinaComumQtd = document.getElementById('gasolinaComumQtd');
+            const gasolinaComumPercent = (estoqueTanques.gasolina_comum / 10000) * 100;
+            gasolinaComumFill.style.height = `${gasolinaComumPercent}%`;
+            gasolinaComumQtd.textContent = estoqueTanques.gasolina_comum.toFixed(2);
+            
+            // Gasolina Aditivada
+            const gasolinaAditivadaFill = document.getElementById('gasolinaAditivadaFill');
+            const gasolinaAditivadaQtd = document.getElementById('gasolinaAditivadaQtd');
+            const gasolinaAditivadaPercent = (estoqueTanques.gasolina_aditivada / 10000) * 100;
+            gasolinaAditivadaFill.style.height = `${gasolinaAditivadaPercent}%`;
+            gasolinaAditivadaQtd.textContent = estoqueTanques.gasolina_aditivada.toFixed(2);
+            
+            // Etanol
+            const etanolFill = document.getElementById('etanolFill');
+            const etanolQtd = document.getElementById('etanolQtd');
+            const etanolPercent = (estoqueTanques.etanol / 10000) * 100;
+            etanolFill.style.height = `${etanolPercent}%`;
+            etanolQtd.textContent = estoqueTanques.etanol.toFixed(2);
+            
+            // Diesel
+            const dieselFill = document.getElementById('dieselFill');
+            const dieselQtd = document.getElementById('dieselQtd');
+            const dieselPercent = (estoqueTanques.diesel / 10000) * 100;
+            dieselFill.style.height = `${dieselPercent}%`;
+            dieselQtd.textContent = estoqueTanques.diesel.toFixed(2);
+            
+            // Verificar alertas de estoque
+            checkStockAlerts();
+        }
+
+        // Check stock alerts
+        function checkStockAlerts() {
+            let alertCount = 0;
+            const alertThreshold = 2000; // 2,000 L
+            
+            if (estoqueTanques.gasolina_comum < alertThreshold) alertCount++;
+            if (estoqueTanques.gasolina_aditivada < alertThreshold) alertCount++;
+            if (estoqueTanques.etanol < alertThreshold) alertCount++;
+            if (estoqueTanques.diesel < alertThreshold) alertCount++;
+            
+            document.getElementById('alertasEstoque').textContent = alertCount;
+        }
+
+        // Initialize charts
+        function initCharts() {
+            // Vendas por Combustível
+            const vendasCombustivelCtx = document.getElementById('vendasCombustivelChart').getContext('2d');
+            const vendasCombustivelChart = new Chart(vendasCombustivelCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Gasolina Comum', 'Gasolina Aditivada', 'Etanol', 'Diesel S10'],
+                    datasets: [{
+                        data: [12500, 8500, 6200, 9800],
+                        backgroundColor: [
+                            '#f59e0b',
+                            '#d97706',
+                            '#10b981',
+                            '#3b82f6'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+
+            // Vendas por Período
+            const vendasPeriodoCtx = document.getElementById('vendasPeriodoChart').getContext('2d');
+            const vendasPeriodoChart = new Chart(vendasPeriodoCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
+                    datasets: [{
+                        label: 'Vendas (R$)',
+                        data: [5200, 4800, 6100, 7300, 8900, 10500, 9200],
+                        backgroundColor: '#3b82f6',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateTankLevels();
+            initCharts();
+        });
+    </script>
+</body>
+</html>
